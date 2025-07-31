@@ -3688,23 +3688,29 @@
       item.addEventListener('click', function() {
         const adIndex = parseInt(this.dataset.ad) - 1;
         // Abrir em nova aba
-        window.open(CONFIG.AD_URL, '_blank');
+        const adWindow = window.open(CONFIG.AD_URL, '_blank');
         
-        // Marcar como assistido após 5 segundos (simulação)
-        setTimeout(() => {
-          state.adState.watched[adIndex] = true;
-          updateAdButtons();
-          
-          const watchedCount = state.adState.watched.filter(w => w).length;
-          document.getElementById('adStatus').textContent = `Aguardando anúncios... (${watchedCount}/4)`;
-          
-          if (watchedCount === 4) {
-            hideAllPanels();
-            if (state.adState.callback) {
-              state.adState.callback();
-            }
+        // Verificar periodicamente se o usuário voltou
+        const checkFocus = setInterval(() => {
+          if (document.hasFocus() && !adWindow.closed) {
+            clearInterval(checkFocus);
+            // Usuário voltou, aguardar 2 segundos
+            setTimeout(() => {
+              state.adState.watched[adIndex] = true;
+              updateAdButtons();
+              
+              const watchedCount = state.adState.watched.filter(w => w).length;
+              document.getElementById('adStatus').textContent = `Aguardando anúncios... (${watchedCount}/4)`;
+              
+              if (watchedCount === 4) {
+                hideAllPanels();
+                if (state.adState.callback) {
+                  state.adState.callback();
+                }
+              }
+            }, 2000); // Aguardar 2 segundos após voltar
           }
-        }, 5000); // 5 segundos
+        }, 500);
       });
     });
     
